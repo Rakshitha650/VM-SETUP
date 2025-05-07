@@ -32,7 +32,7 @@ resource "aws_instance" "performance_vm" {
 }
 
 resource "aws_security_group" "perf_vm_sg" {
-  name        = "mosip-k8s-performance-vmmmmiiiiiii11"
+  name        = "mosip-k8s-performance-vm2"
   description = "Allow necessary access"
 
   ingress {
