@@ -40,30 +40,37 @@ jobs:
         working-directory: terraform
 
       - name: Apply Terraform Configuration
-        id: apply
-        run: terraform apply -auto-approve -no-color
+        run: terraform apply -auto-approve
         working-directory: terraform
 
       - name: Get EC2 Public IP
         id: ec2ip
         run: |
-          IP=$(terraform output -raw ec2_public_ip)
+          IP=$(terraform output -raw instance_public_ip)
           echo "EC2 Public IP: $IP"
           echo "ec2_ip=$IP" >> $GITHUB_OUTPUT
         working-directory: terraform
 
-      - name: Save PEM Key to File
+      - name: Wait for EC2 to be ready
         run: |
-          echo "${{ secrets.KEY_PEM }}" > key.pem
-          chmod 600 key.pem
+          echo "Waiting for EC2 to boot..."
+          sleep 60
+
+      - name: Create install.sh on runner
+        run: |
+          echo '${{ secrets.INSTALL_SH }}' | base64 -d > install.sh
+          chmod +x install.sh
 
       - name: Copy install.sh to EC2
         run: |
-          echo "Copying install.sh to EC2..."
+          echo "${{ secrets.KEY_PEM }}" > key.pem
+          chmod 600 key.pem
           scp -o StrictHostKeyChecking=no -i key.pem install.sh ubuntu@${{ steps.ec2ip.outputs.ec2_ip }}:/home/ubuntu/install.sh
 
       - name: Run install.sh on EC2
         run: |
-          echo "Running install.sh on EC2..."
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ steps.ec2ip.outputs.ec2_ip }} \
-          "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
+            "chmod +x /home/ubuntu/install.sh && sudo /home/ubuntu/install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
+
+      - name: Cleanup private key
+        run: rm -f key.pem
