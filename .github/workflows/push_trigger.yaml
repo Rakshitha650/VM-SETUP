@@ -44,11 +44,11 @@ jobs:
         working-directory: terraform
 
       - name: Get EC2 Public IP
-        id: ec2ip
+        id: get_ec2_ip
         run: |
           IP=$(terraform output -raw instance_public_ip | tr -d '\r')
           echo "EC2 Public IP: $IP"
-          echo "ec2_ip=$IP" >> $GITHUB_ENV
+          echo "ec2_ip=$IP" >> "$GITHUB_ENV"
         working-directory: terraform
 
       - name: Save PEM Key to File
