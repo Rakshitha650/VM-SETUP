@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy EC2 Instance
+    name: Deploy EC2 Instance and Install Software
     runs-on: ubuntu-latest
 
     steps:
@@ -39,7 +39,7 @@ jobs:
         run: terraform init
         working-directory: terraform
 
-      - name: Apply Terraform Configuration
+      - name: Apply Terraform
         run: terraform apply -auto-approve
         working-directory: terraform
 
@@ -48,29 +48,23 @@ jobs:
         run: |
           IP=$(terraform output -raw instance_public_ip)
           echo "EC2 Public IP: $IP"
-          echo "ec2_ip=$IP" >> $GITHUB_OUTPUT
+          echo "ec2_ip=$IP" >> "$GITHUB_OUTPUT"
         working-directory: terraform
 
-      - name: Wait for EC2 to be ready
-        run: |
-          echo "Waiting for EC2 to boot..."
-          sleep 60
-
-      - name: Create install.sh on runner
-        run: |
-          echo '${{ secrets.INSTALL_SH }}' | base64 -d > install.sh
-          chmod +x install.sh
-
-      - name: Copy install.sh to EC2
+      - name: Save PEM Key to File
         run: |
           echo "${{ secrets.KEY_PEM }}" > key.pem
           chmod 600 key.pem
+
+      - name: Copy install.sh to EC2
+        run: |
+          echo "Copying install.sh to EC2..."
           scp -o StrictHostKeyChecking=no -i key.pem install.sh ubuntu@${{ steps.ec2ip.outputs.ec2_ip }}:/home/ubuntu/install.sh
 
       - name: Run install.sh on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ steps.ec2ip.outputs.ec2_ip }} \
-            "chmod +x /home/ubuntu/install.sh && sudo /home/ubuntu/install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
+          echo "Running install.sh on EC2..."
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ steps.ec2ip.outputs.ec2_ip }} "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
 
-      - name: Cleanup private key
+      - name: Cleanup PEM Key
         run: rm -f key.pem
