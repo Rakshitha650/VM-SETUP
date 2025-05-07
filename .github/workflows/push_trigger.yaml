@@ -40,37 +40,30 @@ jobs:
         working-directory: terraform
 
       - name: Apply Terraform Configuration
-        run: terraform apply -auto-approve
+        id: apply
+        run: terraform apply -auto-approve -no-color
         working-directory: terraform
 
-      - name: Fetch VNC User Inputs
+      - name: Get EC2 Public IP
+        id: ec2ip
         run: |
-          echo "VNC Username: ${{ github.event.inputs.vnc_username }}"
-          echo "VNC Password: (hidden for security)"
+          IP=$(terraform output -raw ec2_public_ip)
+          echo "EC2 Public IP: $IP"
+          echo "ec2_ip=$IP" >> $GITHUB_OUTPUT
+        working-directory: terraform
 
-      - name: Debug - Check Terraform Directory and Files
+      - name: Save PEM Key to File
         run: |
-          echo "Current Directory: $(pwd)"
-          echo "Listing Files in Repository:"
-          ls -la
-          echo "Checking Terraform Directory:"
-          ls -la terraform || echo "Terraform directory does not exist!"
-
-      - name: Run Install Script
-        run: |
-          cd terraform
-          chmod +x install.sh
-          ./install.sh "${{ github.event.inputs.vnc_username }}" "${{ github.event.inputs.vnc_password }}"
-
-          echo "Waiting for installation to complete..."
-          sleep 60  # Wait for 60 seconds (adjust as needed)
+          echo "${{ secrets.KEY_PEM }}" > key.pem
+          chmod 600 key.pem
 
       - name: Copy install.sh to EC2
         run: |
           echo "Copying install.sh to EC2..."
-          scp -o StrictHostKeyChecking=no -i ${{ secrets.KEY_PEM }} install.sh ubuntu@${{ steps.ec2ip.outputs.ec2_ip }}:/home/ubuntu/install.sh
+          scp -o StrictHostKeyChecking=no -i key.pem install.sh ubuntu@${{ steps.ec2ip.outputs.ec2_ip }}:/home/ubuntu/install.sh
 
       - name: Run install.sh on EC2
         run: |
           echo "Running install.sh on EC2..."
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.KEY_PEM }} ubuntu@${{ steps.ec2ip.outputs.ec2_ip }} "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ steps.ec2ip.outputs.ec2_ip }} \
+          "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
