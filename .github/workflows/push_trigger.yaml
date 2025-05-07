@@ -61,14 +61,20 @@ jobs:
           chmod 600 key.pem
 
       - name: Wait for EC2 instance to initialize
-        run: sleep 180 # wait 180 seconds
+        run: sleep 120 # Wait for 120 seconds
 
       - name: Copy install.sh to EC2
         run: |
           echo "Changing to repository root..."
           cd $GITHUB_WORKSPACE
           echo "Copying install.sh to EC2..."
-          scp -o StrictHostKeyChecking=no -i key.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh
+          echo "SCP command: scp -o StrictHostKeyChecking=no -i key.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh" # Echo the exact command
+          scp -v -o StrictHostKeyChecking=no -i key.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh # Added -v for verbose output
+          if [ $? -ne 0 ]; then
+            echo "Error: scp command failed with exit code $?"  # Capture exit code
+            exit 1
+          fi
+        #working-directory: terraform #removed working directory.
 
       - name: Run install.sh on EC2
         run: |
