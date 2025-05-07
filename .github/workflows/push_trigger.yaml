@@ -46,8 +46,8 @@ jobs:
       - name: Get EC2 Public IP
         id: ec2ip
         run: |
-          # Fetch the EC2 Public IP from Terraform output and store it in a variable
-          IP=$(terraform output -raw instance_public_ip)
+          cd terraform
+          IP=$(terraform output -raw instance_public_ip | tr -d '\r')
           echo "EC2 Public IP: $IP"
           echo "ec2_ip=$IP" >> $GITHUB_ENV
         working-directory: terraform
