@@ -51,9 +51,7 @@ jobs:
           INSTANCE_PUBLIC_IP=$(terraform output -raw instance_public_ip)
 
           # Output the IPs for debugging and use in subsequent steps.
-          echo "EC2 Private IP: $INSTANCE_PRIVATE_IP"
           echo "EC2 Public IP: $INSTANCE_PUBLIC_IP" # Important for debugging
-          echo "ec2_private_ip=$INSTANCE_PRIVATE_IP" >> "$GITHUB_ENV"
           echo "ec2_ip=$INSTANCE_PUBLIC_IP" >> "$GITHUB_ENV" # Use this in subsequent steps
 
         working-directory: terraform
