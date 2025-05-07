@@ -64,3 +64,13 @@ jobs:
 
           echo "Waiting for installation to complete..."
           sleep 60  # Wait for 60 seconds (adjust as needed)
+
+      - name: Copy install.sh to EC2
+        run: |
+          echo "Copying install.sh to EC2..."
+          scp -o StrictHostKeyChecking=no -i ${{ secrets.KEY_PEM }} install.sh ubuntu@${{ steps.ec2ip.outputs.ec2_ip }}:/home/ubuntu/install.sh
+
+      - name: Run install.sh on EC2
+        run: |
+          echo "Running install.sh on EC2..."
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.KEY_PEM }} ubuntu@${{ steps.ec2ip.outputs.ec2_ip }} "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
