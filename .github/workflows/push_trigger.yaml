@@ -9,13 +9,14 @@ on:
       vnc_password:
         description: "Enter VNC Password"
         required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-    name: Deploy EC2 Instance and Run Script
+    name: Deploy EC2 Instance
     runs-on: ubuntu-latest
 
     steps:
@@ -34,31 +35,32 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Terraform Init
+      - name: Initialize Terraform
         run: terraform init
         working-directory: terraform
 
-      - name: Terraform Apply
+      - name: Apply Terraform Configuration
         run: terraform apply -auto-approve
         working-directory: terraform
 
-      - name: Get EC2 Public IP
-        id: ec2_ip
+      - name: Fetch VNC User Inputs
         run: |
-          echo "Getting public IP..."
-          PUBLIC_IP=$(terraform -chdir=terraform output -raw instance_public_ip | tr -d '\r')
-          echo "EC2_PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
-          echo "Public IP: $PUBLIC_IP"
+          echo "VNC Username: ${{ github.event.inputs.vnc_username }}"
+          echo "VNC Password: (hidden for security)"
 
-      - name: Upload install.sh to EC2
+      - name: Debug - Check Terraform Directory and Files
         run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-          chmod 600 key.pem
+          echo "Current Directory: $(pwd)"
+          echo "Listing Files in Repository:"
+          ls -la
+          echo "Checking Terraform Directory:"
+          ls -la terraform || echo "Terraform directory does not exist!"
 
-          scp -o StrictHostKeyChecking=no -i key.pem install.sh ubuntu@$EC2_PUBLIC_IP:/home/ubuntu/install.sh
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@$EC2_PUBLIC_IP "chmod +x /home/ubuntu/install.sh"
-
-      - name: Run install.sh on EC2
+      - name: Run Install Script
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@$EC2_PUBLIC_IP \
-            "/home/ubuntu/install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
+          cd terraform
+          chmod +x install.sh
+          ./install.sh "${{ github.event.inputs.vnc_username }}" "${{ github.event.inputs.vnc_password }}"
+
+          echo "Waiting for installation to complete..."
+          sleep 60  # Wait for 60 seconds (adjust as needed)
