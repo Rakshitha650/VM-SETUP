@@ -56,6 +56,9 @@ jobs:
           echo "${{ secrets.KEY_PEM }}" > key.pem
           chmod 600 key.pem
 
+      - name: Wait for EC2 instance to initialize
+        run: sleep 60 # Wait for 30 seconds (adjust as needed)
+
       - name: Copy install.sh to EC2
         run: |
           echo "Changing to repository root..."
