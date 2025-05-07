@@ -46,9 +46,10 @@ jobs:
       - name: Get EC2 Public IP
         id: ec2ip
         run: |
+          # Fetch the EC2 Public IP from Terraform output and store it in a variable
           IP=$(terraform output -raw instance_public_ip)
           echo "EC2 Public IP: $IP"
-          echo "ec2_ip=$IP" >> "$GITHUB_OUTPUT"
+          echo "ec2_ip=$IP" >> $GITHUB_ENV
         working-directory: terraform
 
       - name: Save PEM Key to File
@@ -59,12 +60,12 @@ jobs:
       - name: Copy install.sh to EC2
         run: |
           echo "Copying install.sh to EC2..."
-          scp -o StrictHostKeyChecking=no -i key.pem install.sh ubuntu@${{ steps.ec2ip.outputs.ec2_ip }}:/home/ubuntu/install.sh
+          scp -o StrictHostKeyChecking=no -i key.pem install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh
 
       - name: Run install.sh on EC2
         run: |
           echo "Running install.sh on EC2..."
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ steps.ec2ip.outputs.ec2_ip }} "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ env.ec2_ip }} "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
 
       - name: Cleanup PEM Key
         run: rm -f key.pem
