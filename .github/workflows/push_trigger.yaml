@@ -46,7 +46,7 @@ jobs:
       - name: Get EC2 Private IP
         id: get_private_ip
         run: |
-          INSTANCE_PRIVATE_IP=$(terraform output -raw instance_private_ip)
+          INSTANCE_PRIVATE_IP=$(terraform output -raw instance_private_ip | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | head -n 1 | tr -d '\r\n')
           if [ -z "$INSTANCE_PRIVATE_IP" ]; then
             echo "Error: Failed to retrieve EC2 Private IP from Terraform output."
             exit 1
