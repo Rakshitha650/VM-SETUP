@@ -61,7 +61,7 @@ jobs:
           chmod 600 key.pem
 
       - name: Wait for EC2 instance to initialize
-        run: sleep 120 # Wait for 120 seconds
+        run: sleep 180 ait for 120 seconds
 
       - name: Copy install.sh to EC2
         run: |
