@@ -59,7 +59,8 @@ jobs:
       - name: Copy install.sh to EC2
         run: |
           echo "Copying install.sh to EC2..."
-          scp -o StrictHostKeyChecking=no -i key.pem install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh
+          scp -o StrictHostKeyChecking=no -i key.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh
+        working-directory: terraform
 
       - name: Run install.sh on EC2
         run: |
