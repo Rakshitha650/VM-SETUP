@@ -64,7 +64,7 @@ resource "aws_security_group" "perf_vm_sg" {
   }
 }
 
-output "instance_private_ip" {
+output "instance_public_ip" {
   description = "Public IP of the created instance"
-  value       = aws_instance.performance_vm.private_ip
+  value       = aws_instance.performance_vm.public_ip
 }
