@@ -43,12 +43,13 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: terraform
 
-      - name: Get EC2 Public IP
-        id: get_ec2_ip
+      - name: Get EC2 Private IP
+        id: get_private_ip
         run: |
-          IP=$(terraform output -raw instance_public_ip | tr -d '\r')
-          echo "EC2 Public IP: $IP"
-          echo "ec2_ip=$IP" >> "$GITHUB_ENV"
+          PRIVATE_IP=$(terraform output -raw instance_private_ip | tr -d '\r')
+          echo "EC2 Private IP: $PRIVATE_IP"
+          echo "private_ip=$PRIVATE_IP" >> "$GITHUB_ENV"
+          echo "private_ip=$PRIVATE_IP" >> "$GITHUB_OUTPUT"
         working-directory: terraform
 
       - name: Save PEM Key to File
