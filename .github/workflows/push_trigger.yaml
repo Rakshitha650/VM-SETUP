@@ -43,17 +43,16 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: terraform
 
-      - name: Get EC2 Instance Details
-        id: get_instance_details
+      - name: Get EC2 Private IP
+        id: get_private_ip
         run: |
-          # Get both public and private IPs in one command.  Much more efficient.
           INSTANCE_PRIVATE_IP=$(terraform output -raw instance_private_ip)
-          INSTANCE_PUBLIC_IP=$(terraform output -raw instance_public_ip)
-
-          # Output the IPs for debugging and use in subsequent steps.
-          echo "EC2 Public IP: $INSTANCE_PUBLIC_IP" # Important for debugging
-          echo "ec2_ip=$INSTANCE_PUBLIC_IP" >> "$GITHUB_ENV" # Use this in subsequent steps
-
+          if [ -z "$INSTANCE_PRIVATE_IP" ]; then
+            echo "Error: Failed to retrieve EC2 Private IP from Terraform output."
+            exit 1
+          fi
+          echo "EC2 Private IP: $INSTANCE_PRIVATE_IP"
+          echo "ec2_ip=$INSTANCE_PRIVATE_IP" >> "$GITHUB_ENV"
         working-directory: terraform
 
       - name: Save PEM Key to File
@@ -62,7 +61,7 @@ jobs:
           chmod 600 key.pem
 
       - name: Wait for EC2 instance to initialize
-        run: sleep 60 # Wait for 60 seconds (increased for reliability)
+        run: sleep 120 # Wait for 120 seconds
 
       - name: Copy install.sh to EC2
         run: |
