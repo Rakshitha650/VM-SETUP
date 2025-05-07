@@ -57,8 +57,8 @@ jobs:
 
       - name: Save PEM Key to File
         run: |
-          echo "${{ secrets.KEY_PEM }}" > key.pem
-          chmod 600 key.pem
+          echo "${{ secrets.KEY_PEM }}" > mosip-qa.pem
+          chmod 600 mosip-qa.pem
 
       - name: Wait for EC2 instance to initialize
         run: sleep 120 # Wait for 120 seconds
@@ -68,8 +68,8 @@ jobs:
           echo "Changing to repository root..."
           cd $GITHUB_WORKSPACE
           echo "Copying install.sh to EC2..."
-          echo "SCP command: scp -o StrictHostKeyChecking=no -i key.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh" # Echo the exact command
-          scp -v -o StrictHostKeyChecking=no -i key.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh # Added -v for verbose output
+          echo "SCP command: scp -o StrictHostKeyChecking=no -i mosip-qa.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh" # Echo the exact command
+          scp -v -o StrictHostKeyChecking=no -i mosip-qa.pem terraform/install.sh ubuntu@${{ env.ec2_ip }}:/home/ubuntu/install.sh # Added -v for verbose output
           if [ $? -ne 0 ]; then
             echo "Error: scp command failed with exit code $?"  # Capture exit code
             exit 1
@@ -79,7 +79,7 @@ jobs:
       - name: Run install.sh on EC2
         run: |
           echo "Running install.sh on EC2..."
-          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ env.ec2_ip }} "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
+          ssh -o StrictHostKeyChecking=no -i mosip-qa.pem ubuntu@${{ env.ec2_ip }} "chmod +x install.sh && sudo ./install.sh '${{ github.event.inputs.vnc_username }}' '${{ github.event.inputs.vnc_password }}'"
 
       - name: Cleanup PEM Key
-        run: rm -f key.pem
+        run: rm -f mosip-qa.pem
