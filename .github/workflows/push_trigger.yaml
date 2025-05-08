@@ -39,11 +39,36 @@ jobs:
         run: terraform init
         working-directory: terraform
 
-      - name: Apply Terraform
-        run: terraform plan -auto-approve
+      - name: Plan Terraform
+        run: terraform plan
         working-directory: terraform
 
-      - name: Apply Terraform
-        run: terraform apply -auto-approve
-        working-directory: terraform
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -input=false -no-color -auto-approve
+        continue-on-error: true
+
+      - name: Add the Terraform plan file / *.tfstate files / terraform format changes
+        run: |
+            git add -A
+            git status
+            git config --global user.email ${{ github.actor }}@users.noreply.github.com
+            git config --global user.name ${{ github.actor }}
+            git commit -s -am "Terraform files GitHub Actions"
+            git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: always()
+
+      - name: Terraform plan / apply status
+        if: ${{ steps.plan.outcome == 'failure' || steps.apply.outcome == 'failure' }}
+        run: exit 1
+
+      - uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          fields: repo,message,author,commit,workflow,job # selectable (default: repo,message)
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+        if: "${{ github.event_name != 'pull_request' && failure() }}" # Pick up events even if the job fails or is canceled.
 
