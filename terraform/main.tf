@@ -24,7 +24,7 @@ resource "aws_instance" "performance_vm" {
   security_groups = [aws_security_group.perf_vm_sg.name]
 
   # Install required software packages
-  user_data = templatefile("./install.sh.tpl")
+  user_data = templatefile("./install.sh.tpl",{})
 
   tags = {
     Name = "Performance-VM"
