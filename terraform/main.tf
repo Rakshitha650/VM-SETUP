@@ -17,6 +17,11 @@ variable "key_name" {
   default     = "mosip-qa" # Replace with your key pair name
 }
 
+variable "VNC_USERNAME" {
+}
+
+variable "VNC_PASSWORD" {
+}
 resource "aws_instance" "performance_vm" {
   ami             = var.ami_id
   instance_type   = var.instance_type
