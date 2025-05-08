@@ -25,6 +25,8 @@ resource "aws_instance" "performance_vm" {
 
   # Install required software packages
   user_data = templatefile("./install.sh.tpl",{})
+  VNC_USERNAME= var.VNC_USERNAME
+  VNC_PASSWORD= var.VNC_PASSWORD
 
   tags = {
     Name = "Performance-VM"

@@ -11,6 +11,10 @@ on:
         required: true
         type: string
 
+env:
+  TF_VAR_VNC_USERNAME: ${{inputs.vnc_username}}
+  TF_VAR_VNC_PASSWORD: ${{inputs.vnc_password}}
+
 permissions:
   contents: read
 

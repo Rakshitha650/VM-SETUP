@@ -6,8 +6,8 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
-VNC_USERNAME=$1
-VNC_PASSWORD=$2
+#VNC_USERNAME=$1
+#VNC_PASSWORD=$2
 
 # Log file setup
 LOG_FILE="/tmp/performance-vm-$(date +"%d-%b-%Y-%H-%M").log"
