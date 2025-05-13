@@ -6,8 +6,8 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
-#VNC_USERNAME=$1
-#VNC_PASSWORD=$2
+export VNC_USERNAME=\${VNC_USERNAME}
+export VNC_PASSWORD=\${VNC_PASSWORD}
 
 # Log file setup
 LOG_FILE="/tmp/performance-vm-$(date +"%d-%b-%Y-%H-%M").log"
@@ -81,9 +81,9 @@ sudo ufw --force enable
 
 # Install JProfiler 13
 echo "[ Installing JProfiler 13 ]"
-JPROFILER_VERSION="13_0_1"
-JPROFILER_URL="https://download.ej-technologies.com/jprofiler/jprofiler_linux_${JPROFILER_VERSION}.tar.gz"
-JPROFILER_DIR="/opt/jprofiler13"
+export JPROFILER_VERSION="13_0_1"
+export JPROFILER_URL="https://download.ej-technologies.com/jprofiler/jprofiler_linux_\$\{JPROFILER_VERSION\}.tar.gz"
+export JPROFILER_DIR="/opt/jprofiler13"
 
 if [ ! -f "$JPROFILER_DIR/bin/jprofiler" ]; then
     wget -O /tmp/jprofiler.tar.gz "$JPROFILER_URL"
@@ -96,7 +96,7 @@ fi
 # Verify installed packages
 echo "[ Verifying Installed Packages ]"
 REQUIRED_PKGS=("openjdk-11-jdk" "wireguard" "tightvncserver" "xfce4" "ufw" "wget")
-for pkg in "${REQUIRED_PKGS[@]}"; do
+for pkg in \$\{REQUIRED_PKGS\[\@\]\}; do
     if ! dpkg -l | grep -q "$pkg"; then
         echo "Package $pkg is missing. Reinstalling..."
         sudo apt install -y "$pkg"
