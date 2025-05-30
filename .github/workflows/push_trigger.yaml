@@ -16,7 +16,7 @@ env:
   TF_VAR_VNC_PASSWORD: ${{inputs.vnc_password}}
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   deploy:
