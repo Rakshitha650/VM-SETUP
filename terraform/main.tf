@@ -30,8 +30,8 @@ resource "aws_instance" "performance_vm" {
 
   # Install required software packages
   user_data = templatefile("./install.sh.tpl",{
-   VNC_USERNAME= var.VNC_USERNAME
-   VNC_PASSWORD= var.VNC_PASSWORD
+   VNC_USERNAME = var.VNC_USERNAME
+   VNC_PASSWORD = var.VNC_PASSWORD
       })
 
   tags = {
@@ -75,4 +75,9 @@ resource "aws_security_group" "perf_vm_sg" {
 output "instance_private_ip" {
   description = "Private IP of the created instance"
   value       = aws_instance.performance_vm.private_ip
+}
+
+output "instance_public_ip" {
+  description = "Public IP of the created instance"
+  value       = aws_instance.performance_vm.public_ip
 }
