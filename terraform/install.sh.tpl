@@ -1,26 +1,26 @@
 #!/bin/bash
 
-# Check for required arguments
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <VNC_USERNAME> <VNC_PASSWORD>"
-    exit 1
-fi
-
-export VNC_USERNAME=\${VNC_USERNAME}
-export VNC_PASSWORD=\${VNC_PASSWORD}
-
 # Log file setup
 LOG_FILE="/tmp/performance-vm-$(date +"%d-%b-%Y-%H-%M").log"
-echo "[ Log File ]: $LOG_FILE"
-
 # Redirect stdout and stderr to log file
 exec > >(tee -a "$LOG_FILE") 2>&1
-
+echo "[ Log File ]: $LOG_FILE"
 # Strict error handling
 set -euo pipefail
 trap 'echo "[ERROR] Script failed at line $LINENO."' ERR
 
-echo "[ VNC User ]: $VNC_USERNAME"
+export VNC_USERNAME=${VNC_USERNAME}
+export VNC_PASSWORD=${VNC_PASSWORD}
+
+# Check for required arguments
+if [[ -z $VNC_USERNAME ]]; then
+    echo "VNC_USERNAME does not exists; EXITING;"
+    exit 1;
+fi
+if [[ -z $VNC_PASSWORD ]]; then
+   echo "VNC_PASSWORD does not exists; EXITING;"
+   exit 1;
+fi
 
 # Ensure the user exists
 if ! id "$VNC_USERNAME" &>/dev/null; then
@@ -81,8 +81,7 @@ sudo ufw --force enable
 
 # Install JProfiler 13
 echo "[ Installing JProfiler 13 ]"
-export JPROFILER_VERSION="13_0_1"
-export JPROFILER_URL="https://download.ej-technologies.com/jprofiler/jprofiler_linux_\$\{JPROFILER_VERSION\}.tar.gz"
+export JPROFILER_URL="https://download.ej-technologies.com/jprofiler/jprofiler_linux_13_0_1.tar.gz"
 export JPROFILER_DIR="/opt/jprofiler13"
 
 if [ ! -f "$JPROFILER_DIR/bin/jprofiler" ]; then
@@ -95,12 +94,20 @@ fi
 
 # Verify installed packages
 echo "[ Verifying Installed Packages ]"
-REQUIRED_PKGS=("openjdk-11-jdk" "wireguard" "tightvncserver" "xfce4" "ufw" "wget")
-for pkg in \$\{REQUIRED_PKGS\[\@\]\}; do
-    if ! dpkg -l | grep -q "$pkg"; then
-        echo "Package $pkg is missing. Reinstalling..."
-        sudo apt install -y "$pkg"
+sudo apt update
+
+# Space-separated list of packages
+for pkg in openjdk-11-jdk wireguard tightvncserver xfce4 ufw wget; do
+  if ! dpkg -s "$pkg" &> /dev/null; then
+    echo "Package $pkg is missing. Installing..."
+    if sudo apt install -y "$pkg"; then
+      echo "✅ $pkg installed successfully."
+    else
+      echo "❌ Failed to install $pkg."
     fi
+  else
+    echo "✔️ $pkg is already installed."
+  fi
 done
 
 echo "[ ✔ Installation and Configuration Completed Successfully ]"
